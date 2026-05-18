@@ -1,0 +1,108 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import PlayerCard from "./PlayerCard";
+import AddPlayerModal from "./AddPlayerModal";
+import type { Player } from "@/types/player";
+
+interface RosterClientProps {
+  initialPlayers: Player[];
+}
+
+export default function RosterClient({ initialPlayers }: RosterClientProps) {
+  const [players, setPlayers]     = useState<Player[]>(initialPlayers);
+  const [showModal, setShowModal] = useState(false);
+
+  function handlePlayerAdded(player: Player) {
+    setPlayers((prev) => [player, ...prev]);
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/players/${id}`, { method: "DELETE" });
+    setPlayers((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  async function handleSync(id: string) {
+    const res = await fetch(`/api/players/${id}/sync`, { method: "POST" });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error ?? "Sync failed");
+    }
+    const updated = (await res.json()) as Player;
+    setPlayers((prev) => prev.map((p) => (p.id === id ? updated : p)));
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-950">
+      {/* App top bar */}
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-gray-950/80 backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-6 h-14 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/" className="text-lg font-bold tracking-tight">
+              <span className="text-violet-400">Scrim</span>ly
+            </Link>
+            <span className="text-gray-700">/</span>
+            <span className="text-sm font-medium text-white">Roster</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500 hidden sm:block">
+              {players.length} player{players.length !== 1 ? "s" : ""}
+            </span>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 rounded-lg bg-violet-600 px-3.5 py-2 text-sm font-semibold text-white hover:bg-violet-500 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Player
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="mx-auto max-w-7xl px-6 py-8">
+        {players.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 text-center">
+            <div className="mb-5 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-400">
+              <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">No players yet</h3>
+            <p className="text-sm text-gray-500 mb-6 max-w-xs">
+              Add your first player using their Riot ID and we&apos;ll pull their rank, agents, and KDA automatically.
+            </p>
+            <button
+              onClick={() => setShowModal(true)}
+              className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-500 transition-colors"
+            >
+              Add First Player
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {players.map((player) => (
+              <PlayerCard
+                key={player.id}
+                player={player}
+                onDelete={handleDelete}
+                onSync={handleSync}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {showModal && (
+        <AddPlayerModal
+          onClose={() => setShowModal(false)}
+          onSuccess={handlePlayerAdded}
+        />
+      )}
+    </div>
+  );
+}
