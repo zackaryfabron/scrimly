@@ -29,13 +29,13 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <Link
-            href="/login"
+            href="/auth/login"
             className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
           >
             Log in
           </Link>
           <Link
-            href="/signup"
+            href="/auth/signup"
             className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 transition-colors"
           >
             Get started
@@ -63,8 +63,8 @@ export default function Navbar() {
           <Link href="#how-it-works" onClick={() => setMenuOpen(false)} className="hover:text-white transition-colors">How it works</Link>
           <Link href="#pricing" onClick={() => setMenuOpen(false)} className="hover:text-white transition-colors">Pricing</Link>
           <hr className="border-white/[0.06]" />
-          <Link href="/login" className="hover:text-white transition-colors">Log in</Link>
-          <Link href="/signup" className="rounded-lg bg-green-600 px-4 py-2 text-center text-white font-semibold hover:bg-green-500 transition-colors">Get started</Link>
+          <Link href="/auth/login" className="hover:text-white transition-colors">Log in</Link>
+          <Link href="/auth/signup" className="rounded-lg bg-green-600 px-4 py-2 text-center text-white font-semibold hover:bg-green-500 transition-colors">Get started</Link>
         </div>
       )}
     </nav>

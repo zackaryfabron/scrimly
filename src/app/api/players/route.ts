@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getTeamIdFromRequest } from "@/lib/auth";
 import { getAccount, getMMR, getMatches, processMatchData } from "@/lib/valorant";
 
 export async function GET() {
   const supabase = await createClient();
+  const teamId = await getTeamIdFromRequest(supabase);
+  if (!teamId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const { data, error } = await supabase
     .from("players")
     .select("*")
+    .eq("team_id", teamId)
     .order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -29,10 +34,13 @@ export async function POST(req: NextRequest) {
   const [gameName, tagLine] = parts;
 
   const supabase = await createClient();
+  const teamId = await getTeamIdFromRequest(supabase);
+  if (!teamId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: existing } = await supabase
     .from("players")
     .select("id")
+    .eq("team_id", teamId)
     .ilike("riot_id", riotId.trim())
     .maybeSingle();
 
@@ -77,6 +85,7 @@ export async function POST(req: NextRequest) {
       kda_assists: avgAssists,
       kda_history: matchHistory,
       last_synced_at: new Date().toISOString(),
+      team_id: teamId,
     })
     .select()
     .single();

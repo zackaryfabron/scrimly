@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getTeamIdFromRequest } from "@/lib/auth";
 import { getAccount, getMMR, getMatches, processMatchData } from "@/lib/valorant";
 
 export async function POST(
@@ -8,11 +9,14 @@ export async function POST(
 ) {
   const { id } = await params;
   const supabase = await createClient();
+  const teamId = await getTeamIdFromRequest(supabase);
+  if (!teamId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: player, error: fetchError } = await supabase
     .from("players")
     .select("*")
     .eq("id", id)
+    .eq("team_id", teamId)
     .single();
 
   if (fetchError || !player) {
@@ -50,6 +54,7 @@ export async function POST(
       last_synced_at: new Date().toISOString(),
     })
     .eq("id", id)
+    .eq("team_id", teamId)
     .select()
     .single();
 
