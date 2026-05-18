@@ -90,18 +90,18 @@ export default function LandingPage() {
       {/* Hero */}
       <section className="relative flex flex-col items-center justify-center min-h-screen px-6 text-center overflow-hidden pt-16">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-[600px] w-[900px] rounded-full bg-violet-700/20 blur-[120px]" />
+          <div className="h-[600px] w-[900px] rounded-full bg-green-600/10 blur-[140px]" />
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-1.5 text-sm font-medium text-violet-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-green-500/25 bg-green-500/8 px-4 py-1.5 text-sm font-medium text-green-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
             Built for competitive esports teams
           </div>
 
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-tight">
             Run your esports org{" "}
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-green-400 to-emerald-300 bg-clip-text text-transparent">
               without the chaos
             </span>
           </h1>
@@ -114,26 +114,26 @@ export default function LandingPage() {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="/signup"
-              className="w-full sm:w-auto rounded-xl bg-violet-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-violet-900/40 hover:bg-violet-500 transition-colors"
+              className="w-full sm:w-auto rounded-xl bg-green-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-green-900/30 hover:bg-green-500 transition-colors"
             >
               Start for free
             </Link>
             <Link
               href="#features"
-              className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/5 px-8 py-3.5 text-base font-semibold text-white hover:bg-white/10 transition-colors"
+              className="w-full sm:w-auto rounded-xl border border-white/10 bg-white/[0.04] px-8 py-3.5 text-base font-semibold text-white hover:bg-white/[0.08] transition-colors"
             >
               See features
             </Link>
           </div>
 
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-sm text-gray-600">
             No credit card required · Free for orgs up to 15 members
           </p>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="py-24 px-6 bg-gray-900/50">
+      <section id="features" className="py-24 px-6 bg-white/[0.02]">
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-white">
@@ -148,9 +148,9 @@ export default function LandingPage() {
             {features.map((f) => (
               <div
                 key={f.title}
-                className="rounded-2xl border border-white/10 bg-gray-900 p-6 hover:border-violet-500/40 transition-colors group"
+                className="rounded-2xl border border-white/[0.07] bg-[#111111] p-6 hover:border-green-500/30 transition-colors group"
               >
-                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/15 text-violet-400 group-hover:bg-violet-500/25 transition-colors">
+                <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-green-500/10 text-green-500 group-hover:bg-green-500/18 transition-colors">
                   {f.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{f.title}</h3>
@@ -175,9 +175,9 @@ export default function LandingPage() {
             {steps.map((step, i) => (
               <div key={step.number} className="relative flex flex-col items-center text-center">
                 {i < steps.length - 1 && (
-                  <div className="hidden sm:block absolute top-6 left-[calc(50%+2rem)] right-[calc(-50%+2rem)] h-px bg-gradient-to-r from-violet-500/40 to-transparent" />
+                  <div className="hidden sm:block absolute top-6 left-[calc(50%+2rem)] right-[calc(-50%+2rem)] h-px bg-gradient-to-r from-green-500/30 to-transparent" />
                 )}
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-violet-600/20 border border-violet-500/30 text-violet-300 font-bold text-sm">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-600/12 border border-green-500/25 text-green-400 font-bold text-sm">
                   {step.number}
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
@@ -189,7 +189,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section id="pricing" className="py-24 px-6 bg-gray-900/50">
+      <section id="pricing" className="py-24 px-6 bg-white/[0.02]">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
             Ready to level up your org?
@@ -199,7 +199,7 @@ export default function LandingPage() {
           </p>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-violet-900/40 hover:bg-violet-500 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-10 py-4 text-base font-semibold text-white shadow-lg shadow-green-900/30 hover:bg-green-500 transition-colors"
           >
             Create your org
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,7 +210,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/10 py-8 px-6 text-center text-sm text-gray-500">
+      <footer className="border-t border-white/[0.06] py-8 px-6 text-center text-sm text-gray-600">
         <p>© {new Date().getFullYear()} Scrimly. All rights reserved.</p>
       </footer>
     </>

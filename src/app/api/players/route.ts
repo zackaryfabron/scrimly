@@ -56,10 +56,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 422 });
   }
 
-  const { topAgents, avgKills, avgDeaths, avgAssists } = processMatchData(
-    matches,
-    account.puuid
-  );
+  const { topAgents, avgKills, avgDeaths, avgAssists, matchHistory } =
+    processMatchData(matches, account.puuid);
 
   const { data, error } = await supabase
     .from("players")
@@ -77,6 +75,7 @@ export async function POST(req: NextRequest) {
       kda_kills: avgKills,
       kda_deaths: avgDeaths,
       kda_assists: avgAssists,
+      kda_history: matchHistory,
       last_synced_at: new Date().toISOString(),
     })
     .select()

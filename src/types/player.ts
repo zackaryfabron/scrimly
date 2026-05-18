@@ -6,6 +6,15 @@ export interface TopAgent {
   kda: string;
 }
 
+export interface MatchDataPoint {
+  game: number;
+  kills: number;
+  deaths: number;
+  assists: number;
+  kda: number;
+  won: boolean;
+}
+
 export interface Player {
   id: string;
   puuid: string | null;
@@ -21,6 +30,7 @@ export interface Player {
   kda_kills: number | null;
   kda_deaths: number | null;
   kda_assists: number | null;
+  kda_history: MatchDataPoint[];
   last_synced_at: string | null;
   created_at: string;
 }

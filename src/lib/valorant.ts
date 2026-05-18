@@ -1,4 +1,4 @@
-import type { TopAgent } from "@/types/player";
+import type { TopAgent, MatchDataPoint } from "@/types/player";
 
 const HENRIK_BASE = "https://api.henrikdev.xyz";
 
@@ -68,7 +68,7 @@ export async function getMMR(
     const json = await henrikFetch(
       `/valorant/v2/mmr/${region}/${encodeURIComponent(name)}/${encodeURIComponent(tag)}`
     );
-    return json.data as MMRData;
+    return json.data.current_data as MMRData;
   } catch {
     return null;
   }
@@ -95,6 +95,7 @@ export interface ProcessedStats {
   avgKills: number;
   avgDeaths: number;
   avgAssists: number;
+  matchHistory: MatchDataPoint[];
 }
 
 export function processMatchData(matches: Match[], puuid: string): ProcessedStats {
@@ -113,6 +114,9 @@ export function processMatchData(matches: Match[], puuid: string): ProcessedStat
   let totalDeaths = 0;
   let totalAssists = 0;
   let matchCount = 0;
+
+  // Matches arrive newest-first; collect then reverse so game 1 = oldest.
+  const rawHistory: Omit<MatchDataPoint, "game">[] = [];
 
   for (const match of matches) {
     const player = match.players.all_players.find((p) => p.puuid === puuid);
@@ -140,10 +144,19 @@ export function processMatchData(matches: Match[], puuid: string): ProcessedStat
     const team = player.team.toLowerCase() as "red" | "blue";
     if (match.teams[team]?.has_won) ag.wins++;
 
-    totalKills += player.stats.kills;
-    totalDeaths += player.stats.deaths;
-    totalAssists += player.stats.assists;
+    const { kills, deaths, assists } = player.stats;
+    totalKills += kills;
+    totalDeaths += deaths;
+    totalAssists += assists;
     matchCount++;
+
+    rawHistory.push({
+      kills,
+      deaths,
+      assists,
+      kda: parseFloat(((kills + assists) / Math.max(deaths, 1)).toFixed(2)),
+      won: match.teams[team]?.has_won ?? false,
+    });
   }
 
   const topAgents: TopAgent[] = Object.values(agentMap)
@@ -160,10 +173,15 @@ export function processMatchData(matches: Match[], puuid: string): ProcessedStat
           : "Perfect",
     }));
 
+  const matchHistory: MatchDataPoint[] = rawHistory
+    .reverse()
+    .map((m, i) => ({ ...m, game: i + 1 }));
+
   return {
     topAgents,
     avgKills: matchCount > 0 ? totalKills / matchCount : 0,
     avgDeaths: matchCount > 0 ? totalDeaths / matchCount : 0,
     avgAssists: matchCount > 0 ? totalAssists / matchCount : 0,
+    matchHistory,
   };
 }

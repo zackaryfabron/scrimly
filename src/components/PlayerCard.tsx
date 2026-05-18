@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import type { Player, TopAgent } from "@/types/player";
+import KdaTrendChart from "./KdaTrendChart";
 
 function getRankStyle(tier: string | null): { text: string; bg: string } {
   if (!tier) return { text: "text-gray-500", bg: "bg-gray-500/10" };
@@ -39,21 +40,21 @@ function kdaRatio(k: number | null, d: number | null, a: number | null): string 
 function AgentBubble({ agent }: { agent: TopAgent }) {
   return (
     <div className="flex flex-col items-center gap-1 w-16">
-      <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-gray-800 flex-shrink-0 ring-1 ring-white/10">
+      <div className="relative h-10 w-10 rounded-lg overflow-hidden bg-[#1a1a1a] flex-shrink-0 ring-1 ring-white/[0.08]">
         {agent.imageUrl ? (
           <Image src={agent.imageUrl} alt={agent.name} fill sizes="40px" className="object-cover" />
         ) : (
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-400">
+          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-gray-500">
             {agent.name[0]}
           </span>
         )}
       </div>
       <span className="text-[11px] font-medium text-white truncate w-full text-center">{agent.name}</span>
-      <span className="text-[10px] text-gray-500">{agent.games}G</span>
-      <span className={`text-[10px] font-semibold ${agent.winrate >= 50 ? "text-emerald-400" : "text-red-400"}`}>
+      <span className="text-[10px] text-gray-600">{agent.games}G</span>
+      <span className={`text-[10px] font-semibold ${agent.winrate >= 50 ? "text-green-400" : "text-red-400"}`}>
         {agent.winrate}% WR
       </span>
-      <span className="text-[10px] text-gray-500">{agent.kda} KDA</span>
+      <span className="text-[10px] text-gray-600">{agent.kda} KDA</span>
     </div>
   );
 }
@@ -65,11 +66,13 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps) {
-  const [syncing, setSyncing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [syncing, setSyncing]       = useState(false);
+  const [syncError, setSyncError]   = useState<string | null>(null);
+  const [deleting, setDeleting]     = useState(false);
+  const [showChart, setShowChart]   = useState(false);
 
   const rankStyle = getRankStyle(player.rank_tier);
+  const history = player.kda_history ?? [];
 
   async function handleSync() {
     setSyncing(true);
@@ -90,31 +93,42 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
   }
 
   return (
-    <div className={`rounded-2xl border border-white/10 bg-gray-900 p-5 flex flex-col gap-4 transition-all hover:border-violet-500/30 ${deleting ? "opacity-40 pointer-events-none" : ""}`}>
+    <div className={`rounded-2xl border border-white/[0.07] bg-[#111111] p-5 flex flex-col gap-4 transition-all hover:border-green-500/25 ${deleting ? "opacity-40 pointer-events-none" : ""}`}>
       {/* Header */}
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-base font-bold text-white leading-tight">
+          <p className="text-base font-bold text-white leading-tight truncate">
             {player.game_name}
             <span className="text-gray-500 font-normal text-sm">#{player.tag_line}</span>
           </p>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${rankStyle.text} ${rankStyle.bg}`}>
+              {player.rank_tier ?? "Unranked"}
+            </span>
+            {player.rank_rr != null && player.rank_tier && (
+              <span className="text-xs text-gray-500 tabular-nums">{player.rank_rr} RR</span>
+            )}
+          </div>
+          <p className="text-xs text-gray-600 mt-0.5">
             Lv.&nbsp;{player.account_level ?? "—"} &middot; {player.region.toUpperCase()}
           </p>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${rankStyle.text} ${rankStyle.bg}`}>
-            {player.rank_tier ?? "Unranked"}
-            {player.rank_rr != null && player.rank_tier && (
-              <span className="opacity-60 font-normal ml-1 text-[10px]">{player.rank_rr} RR</span>
-            )}
-          </span>
+          <button
+            onClick={() => setShowChart((v) => !v)}
+            title={showChart ? "Hide trend" : "Show KDA trend"}
+            className={`p-1.5 rounded-lg transition-colors ${showChart ? "text-green-400 bg-green-400/10" : "text-gray-600 hover:text-green-400 hover:bg-green-400/10"}`}
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+            </svg>
+          </button>
           <button
             onClick={handleSync}
             disabled={syncing}
             title="Re-sync stats"
-            className="p-1.5 rounded-lg text-gray-600 hover:text-violet-400 hover:bg-violet-400/10 transition-colors disabled:opacity-40"
+            className="p-1.5 rounded-lg text-gray-600 hover:text-green-400 hover:bg-green-400/10 transition-colors disabled:opacity-40"
           >
             <svg className={`h-3.5 w-3.5 ${syncing ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -136,7 +150,7 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
         <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-1.5">{syncError}</p>
       )}
 
-      <div className="h-px bg-white/5" />
+      <div className="h-px bg-white/[0.05]" />
 
       {/* Top agents */}
       <div>
@@ -154,7 +168,20 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
         )}
       </div>
 
-      <div className="h-px bg-white/5" />
+      {/* KDA Trend chart */}
+      {showChart && (
+        <>
+          <div className="h-px bg-white/[0.05]" />
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-2">
+              KDA Trend{history.length > 0 ? ` · ${history.length} games` : ""}
+            </p>
+            <KdaTrendChart data={history} />
+          </div>
+        </>
+      )}
+
+      <div className="h-px bg-white/[0.05]" />
 
       {/* KDA footer */}
       <div className="flex items-end justify-between">
@@ -163,7 +190,7 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
             Avg KDA
           </p>
           <p className="text-sm font-medium text-white">
-            <span className="text-emerald-400">{player.kda_kills?.toFixed(1) ?? "—"}</span>
+            <span className="text-green-400">{player.kda_kills?.toFixed(1) ?? "—"}</span>
             <span className="text-gray-600 mx-1">/</span>
             <span className="text-red-400">{player.kda_deaths?.toFixed(1) ?? "—"}</span>
             <span className="text-gray-600 mx-1">/</span>
