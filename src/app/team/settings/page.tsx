@@ -56,7 +56,7 @@ export default function TeamSettingsPage() {
       <header className="sticky top-0 z-20 border-b border-white/[0.06] bg-[#0a0a0a]/90 backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-6 h-14 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-lg font-bold tracking-tight">
+            <Link href="/roster" className="text-lg font-bold tracking-tight">
               <span className="text-green-500">Scrim</span>ly
             </Link>
             <span className="text-gray-700">/</span>
