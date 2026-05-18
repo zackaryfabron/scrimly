@@ -224,6 +224,18 @@ export default function MapPlannerClient({ maps, agents, players, initialComposi
             >
               Roster
             </Link>
+            <Link
+              href="/availability"
+              className="text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Availability
+            </Link>
+            <Link
+              href="/scrims"
+              className="text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Scrims
+            </Link>
             <div className="w-px h-4 bg-white/[0.08]" />
             <span className="text-xs text-gray-500 hidden sm:block">{username}</span>
             <Link

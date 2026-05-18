@@ -59,6 +59,18 @@ export default function RosterClient({ initialPlayers, username }: RosterClientP
             >
               Maps
             </Link>
+            <Link
+              href="/availability"
+              className="text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Availability
+            </Link>
+            <Link
+              href="/scrims"
+              className="text-xs text-gray-500 hover:text-white transition-colors"
+            >
+              Scrims
+            </Link>
 
             {/* View toggle */}
 

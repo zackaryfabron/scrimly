@@ -32,7 +32,7 @@ async function refreshSession(request: NextRequest) {
   return { user, response };
 }
 
-const protectedPrefixes = ["/roster", "/maps", "/team"];
+const protectedPrefixes = ["/roster", "/maps", "/team", "/availability", "/scrims"];
 
 export default async function proxy(request: NextRequest) {
   const { user, response } = await refreshSession(request);
