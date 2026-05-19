@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { Player, TopAgent } from "@/types/player";
+import type { ReliabilityStats } from "@/types/attendance";
 import KdaTrendChart from "./KdaTrendChart";
 
 function getRankStyle(tier: string | null): { text: string; bg: string } {
@@ -61,15 +62,22 @@ function AgentBubble({ agent }: { agent: TopAgent }) {
 
 interface PlayerCardProps {
   player: Player;
+  canEdit: boolean;
+  reliability: ReliabilityStats | null;
   onDelete: (id: string) => Promise<void>;
   onSync: (id: string) => Promise<void>;
+  onNicknameUpdate: (id: string, nickname: string) => Promise<void>;
 }
 
-export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps) {
-  const [syncing, setSyncing]       = useState(false);
-  const [syncError, setSyncError]   = useState<string | null>(null);
-  const [deleting, setDeleting]     = useState(false);
-  const [showChart, setShowChart]   = useState(false);
+export default function PlayerCard({ player, canEdit, reliability, onDelete, onSync, onNicknameUpdate }: PlayerCardProps) {
+  const [syncing, setSyncing]           = useState(false);
+  const [syncError, setSyncError]       = useState<string | null>(null);
+  const [deleting, setDeleting]         = useState(false);
+  const [showChart, setShowChart]       = useState(false);
+  const [editingNick, setEditingNick]   = useState(false);
+  const [nickDraft, setNickDraft]       = useState("");
+  const [savingNick, setSavingNick]     = useState(false);
+  const nickInputRef                    = useRef<HTMLInputElement>(null);
 
   const rankStyle = getRankStyle(player.rank_tier);
   const history = player.kda_history ?? [];
@@ -92,6 +100,27 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
     await onDelete(player.id);
   }
 
+  function startEditNick() {
+    setNickDraft(player.nickname ?? "");
+    setEditingNick(true);
+    setTimeout(() => nickInputRef.current?.focus(), 0);
+  }
+
+  async function saveNick() {
+    setSavingNick(true);
+    try {
+      await onNicknameUpdate(player.id, nickDraft);
+      setEditingNick(false);
+    } finally {
+      setSavingNick(false);
+    }
+  }
+
+  function cancelNick() {
+    setEditingNick(false);
+    setNickDraft("");
+  }
+
   return (
     <div className={`rounded-2xl border border-white/[0.07] bg-[#111111] p-5 flex flex-col gap-4 transition-all hover:border-green-500/25 ${deleting ? "opacity-40 pointer-events-none" : ""}`}>
       {/* Header */}
@@ -101,6 +130,57 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
             {player.game_name}
             <span className="text-gray-500 font-normal text-sm">#{player.tag_line}</span>
           </p>
+
+          {/* Nickname */}
+          {editingNick ? (
+            <div className="flex items-center gap-1 mt-1">
+              <input
+                ref={nickInputRef}
+                value={nickDraft}
+                onChange={(e) => setNickDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveNick(); else if (e.key === "Escape") cancelNick(); }}
+                maxLength={32}
+                placeholder="Nickname…"
+                className="flex-1 min-w-0 bg-white/[0.06] border border-white/[0.12] rounded-md px-2 py-0.5 text-xs text-white placeholder-gray-600 focus:outline-none focus:border-green-500/50"
+              />
+              <button
+                onClick={saveNick}
+                disabled={savingNick}
+                className="p-1 rounded text-green-400 hover:bg-green-400/10 disabled:opacity-40 transition-colors"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </button>
+              <button
+                onClick={cancelNick}
+                className="p-1 rounded text-gray-500 hover:bg-white/[0.06] transition-colors"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ) : (player.nickname || canEdit) ? (
+            <div className="flex items-center gap-1 mt-0.5 group/nick">
+              {player.nickname ? (
+                <span className="text-xs text-gray-400 italic truncate">{player.nickname}</span>
+              ) : (
+                <span className="text-xs text-gray-700 italic">Add nickname…</span>
+              )}
+              {canEdit && (
+                <button
+                  onClick={startEditNick}
+                  className="opacity-0 group-hover/nick:opacity-100 p-0.5 rounded text-gray-600 hover:text-green-400 transition-all"
+                >
+                  <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536M9 11l6.536-6.536a2 2 0 012.828 0l.172.172a2 2 0 010 2.828L12 13.5 9 15l1.5-3z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ) : null}
+
           <div className="flex items-center gap-2 mt-1">
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap ${rankStyle.text} ${rankStyle.bg}`}>
               {player.rank_tier ?? "Unranked"}
@@ -177,6 +257,61 @@ export default function PlayerCard({ player, onDelete, onSync }: PlayerCardProps
               KDA Trend{history.length > 0 ? ` · ${history.length} games` : ""}
             </p>
             <KdaTrendChart data={history} />
+          </div>
+        </>
+      )}
+
+      {/* Reliability — owner-only */}
+      {canEdit && reliability && reliability.total_scrims > 0 && (
+        <>
+          <div className="h-px bg-white/[0.05]" />
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-gray-600 mb-2.5">
+              Reliability
+            </p>
+            <div className="space-y-2">
+              {/* Attendance rate bar */}
+              <div className="flex items-center gap-2.5">
+                <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      reliability.attendance_rate >= 80
+                        ? "bg-green-500"
+                        : reliability.attendance_rate >= 50
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                    }`}
+                    style={{ width: `${reliability.attendance_rate}%` }}
+                  />
+                </div>
+                <span className={`text-xs font-bold tabular-nums flex-shrink-0 ${
+                  reliability.attendance_rate >= 80
+                    ? "text-green-400"
+                    : reliability.attendance_rate >= 50
+                    ? "text-amber-400"
+                    : "text-red-400"
+                }`}>
+                  {reliability.attendance_rate}%
+                </span>
+              </div>
+              {/* Stats row */}
+              <div className="flex items-center gap-3 text-[10px]">
+                <span className="text-gray-600">
+                  {reliability.total_scrims} scrim{reliability.total_scrims !== 1 ? "s" : ""}
+                </span>
+                {reliability.late_count > 0 && (
+                  <span className="text-amber-500/70">
+                    {reliability.late_count} late
+                    {reliability.avg_late_minutes !== null && ` · avg ${reliability.avg_late_minutes}m`}
+                  </span>
+                )}
+                {reliability.absent_count > 0 && (
+                  <span className="text-red-500/70">
+                    {reliability.absent_count} no-show{reliability.absent_count !== 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </>
       )}

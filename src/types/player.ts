@@ -33,4 +33,5 @@ export interface Player {
   kda_history: MatchDataPoint[];
   last_synced_at: string | null;
   created_at: string;
+  nickname: string | null;
 }

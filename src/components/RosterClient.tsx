@@ -7,15 +7,18 @@ import AddPlayerModal from "./AddPlayerModal";
 import TeamComparisonView from "./TeamComparisonView";
 import LogoutButton from "./LogoutButton";
 import type { Player } from "@/types/player";
+import type { ReliabilityStats } from "@/types/attendance";
 
 interface RosterClientProps {
   initialPlayers: Player[];
   username: string;
+  role: "owner" | "member";
+  reliabilityStats: Record<string, ReliabilityStats>;
 }
 
 type View = "cards" | "team";
 
-export default function RosterClient({ initialPlayers, username }: RosterClientProps) {
+export default function RosterClient({ initialPlayers, username, role, reliabilityStats }: RosterClientProps) {
   const [players, setPlayers]     = useState<Player[]>(initialPlayers);
   const [showModal, setShowModal] = useState(false);
   const [view, setView]           = useState<View>("cards");
@@ -34,6 +37,20 @@ export default function RosterClient({ initialPlayers, username }: RosterClientP
     if (!res.ok) {
       const { error } = await res.json();
       throw new Error(error ?? "Sync failed");
+    }
+    const updated = (await res.json()) as Player;
+    setPlayers((prev) => prev.map((p) => (p.id === id ? updated : p)));
+  }
+
+  async function handleNicknameUpdate(id: string, nickname: string) {
+    const res = await fetch(`/api/players/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nickname }),
+    });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error ?? "Failed to update nickname");
     }
     const updated = (await res.json()) as Player;
     setPlayers((prev) => prev.map((p) => (p.id === id ? updated : p)));
@@ -157,8 +174,11 @@ export default function RosterClient({ initialPlayers, username }: RosterClientP
               <PlayerCard
                 key={player.id}
                 player={player}
+                canEdit={role === "owner"}
+                reliability={reliabilityStats[player.id] ?? null}
                 onDelete={handleDelete}
                 onSync={handleSync}
+                onNicknameUpdate={handleNicknameUpdate}
               />
             ))}
           </div>

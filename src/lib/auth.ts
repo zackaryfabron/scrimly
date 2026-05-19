@@ -48,3 +48,21 @@ export async function getTeamIdFromRequest(
 
   return (data?.team_id as string) ?? null;
 }
+
+export async function getAuthFromRequest(
+  supabase: SupabaseClient
+): Promise<{ teamId: string; role: "owner" | "member" } | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from("team_members")
+    .select("team_id, role")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!data) return null;
+  return { teamId: data.team_id as string, role: data.role as "owner" | "member" };
+}
